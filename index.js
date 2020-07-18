@@ -1,6 +1,5 @@
 var bcrypt = require('bcrypt')
 var uuid = require('node-uuid')
-var xtend = require('xtend')
 
 module.exports = Users
 var sep = '\xff'
@@ -164,40 +163,33 @@ Users.prototype.create = function(user, cb) {
   })
 }
 
-Users.prototype.addMetadata = function(id, metadata, options, cb) {
-  if (typeof options == 'function') {
-    cb = options
-    options = { method: 'merge' }
-  }
-
+Users.prototype.removeGroups = function(id, groups, cb) {
   this.get(id, function(err, user, put) {
     if (err) {
       return cb(err)
     }
-    
-    user.metadata = user.metadata || {}
-
-    if (options.method == 'override') {
-      user.metadata = metadata
-    }
-    else {
-      user.metadata = xtend(user.metadata, metadata)
-    }
-
+    groups.forEach(function(group, index) {
+      var pos = user.groups.indexOf(group)
+      if (pos > -1) {
+        user.groups.splice(pos, 1)
+      }
+    })
     cb(null, user, put)
   })
 }
 
-Users.prototype.removeMetadata = function(id, metakey, cb) {
+Users.prototype.addGroups = function(id, groups, cb) {
   this.get(id, function(err, user, put) {
     if (err) {
       return cb(err)
     }
+    groups.forEach(function(group, index) {
 
-    user.metadata = user.metadata || {}
-
-    delete user.metadata[metakey]
-    
+      var pos = user.groups.indexOf(group)
+      if (pos < 0) {
+        user.groups.push(group)
+      }
+    })
     cb(null, user, put)
   })
 }
